@@ -1,0 +1,150 @@
+#INITIALISATION
+units           metal          # Å, ps, eV, bar, K
+dimension       3
+boundary        p s p          # periodic x,z  |  shrink-wrapped y (loading axis)
+atom_style      atomic
+timestep        0.001          # 1 fs  (0.001 ps)
+
+
+# GEOMETRY VARIABLES
+variable  a          equal  4.05          # lattice constant
+
+# Box dimensions
+variable  Lx_A       equal  100*${a}      # 405.0  Å
+variable  Ly_A       equal  50*${a}       # 202.5  Å
+variable  Lz_A       equal  10*${a}       # 40.5   Å
+
+# Boundary layer thickness  =>  2 lattice units
+variable  bl         equal  2*${a}        # 8.1 Å
+
+# Crack dimensions  (10 x 5 x 10 lattice units, centred in XY)
+variable  cx1        equal  (50-5)*${a}   # 182.25 Å
+variable  cx2        equal  (50+5)*${a}   # 222.75 Å
+variable  cy1        equal  (25-2.5)*${a} #  91.125 Å
+variable  cy2        equal  (25+2.5)*${a} # 111.375 Å
+
+
+# CREATE LATTICE & SIMULATION BOX
+lattice         fcc ${a}
+region          simbox block 0 100 0 50 0 10 units lattice
+create_box      3 simbox        # 3 types: mobile(1), bot-boundary(2), top-boundary(3)
+create_atoms    1 box           # all atoms start as Type 1 (mobile)
+
+
+#CARVE RECTANGULAR CRACK (Middle of XY Plane)
+region          crack_reg block ${cx1} ${cx2} ${cy1} ${cy2} 0 ${Lz_A} units box
+delete_atoms    region crack_reg compress no
+mass 1 26.9815
+mass 2 26.9815
+mass 3 26.9815
+reset_atoms id
+
+
+#DEFINE ATOM GROUPS & SET TYPES
+
+variable  ylo_b   equal  ${bl}               # 8.1  Å  (bottom boundary top-edge)
+variable  yhi_b   equal  ${Ly_A}-${bl}       # 194.4 Å (top boundary bottom-edge)
+
+region    bot_reg  block INF INF 0        ${ylo_b}  INF INF units box
+region    top_reg  block INF INF ${yhi_b} ${Ly_A}   INF INF units box
+region    mob_reg  block INF INF ${ylo_b} ${yhi_b}  INF INF units box
+
+group     bot_atoms region bot_reg
+group     top_atoms region top_reg
+group     mobile    region mob_reg
+
+# Assign types for colour-coded visualisation (matches figure)
+set  group bot_atoms  type 2     # blue  — bottom boundary
+set  group top_atoms  type 3     # yellow — top boundary
+
+
+
+#INTERATOMIC POTENTIAL
+pair_style   eam/alloy
+pair_coeff   * * Al99.eam.alloy Al Al Al
+
+
+
+# ENERGY MINIMISATION  (before loading)
+# Freeze boundary atoms during minimisation
+fix   fix_min_bot  bot_atoms  setforce 0.0 0.0 0.0
+fix   fix_min_top  top_atoms  setforce 0.0 0.0 0.0
+
+minimize  1.0e-6  1.0e-8  5000  50000   # etol ftol maxiter maxeval
+
+unfix  fix_min_bot
+unfix  fix_min_top
+reset_timestep  0   # restart step counter after minimisation
+
+
+#COMPUTES : Per-atom stress + Flow stress
+compute  stress_atom  mobile  stress/atom  NULL
+# stress/atom gives  sigma_ij * V_i  per atom  (units: bar·Å³ in metal)
+
+# Sum the yy component over all mobile atoms
+compute  sum_syy  mobile  reduce  sum  c_stress_atom[2]
+
+# System volume
+variable  vol  equal  vol
+
+# Flow stress (GPa) = -Σ(σ_yy·Vi) / V  ×  1e-4   [bar → GPa, sign flip for tension+]
+variable  flow_stress  equal  -c_sum_syy/(v_vol*10000.0)
+
+# Strain (%) based on timestep × dt × strain_rate × 100
+# Strain rate = 0.01 /ps  →  total strain = 10% over 10,000 × 0.001 ps = 10 ps
+variable  strain_rate  equal  0.01         # per ps
+variable  strain_pct   equal  step*0.001*${strain_rate}*100.0
+
+
+#VELOCITY INITIALISATION & NVT FIX (mobile atoms)
+velocity  mobile  create  300  48279  mom yes  rot yes  dist gaussian
+
+fix  nvt_mobile  mobile  nvt  temp  300 300  0.1
+# Nosé–Hoover thermostat, damping = 0.1 ps
+
+
+#LOADING : Constant velocity (boundary atoms)
+# vy = ±(strain_rate × Ly / 2)  for symmetric loading
+variable  vy_top  equal   ${strain_rate}*${Ly_A}/2.0   #  +1.0125 Å/ps
+variable  vy_bot  equal  -${strain_rate}*${Ly_A}/2.0   #  -1.0125 Å/ps
+
+fix  move_top  top_atoms  move  linear  0.0  ${vy_top}  0.0
+fix  move_bot  bot_atoms  move  linear  0.0  ${vy_bot}  0.0
+
+# Zero x,z forces on boundary atoms (rigid in lateral directions)
+fix  sf_top    top_atoms  setforce  0.0  NULL  0.0
+fix  sf_bot    bot_atoms  setforce  0.0  NULL  0.0
+
+
+#THERMODYNAMIC OUTPUT  (every 100 steps)
+thermo       100
+thermo_style custom step temp etotal press vol v_flow_stress v_strain_pct
+# Columns: timestep | temperature(K) | total energy(eV) | pressure(bar) |
+#          volume(Å³) | flow_stress(GPa) | strain(%)
+
+
+#DUMP FILE FOR OVITO VISUALISATION
+
+dump  visdump  all  custom  500  crack_Al.dump  &
+      id  type  xs  ys  zs  &
+      c_stress_atom[1]  c_stress_atom[2]  c_stress_atom[3]  &
+      c_stress_atom[4]  c_stress_atom[5]  c_stress_atom[6]
+# Dump every 500 steps → 20 snapshots total (steps 500,1000,...,10000)
+
+
+dump_modify  visdump  sort id
+
+
+#TEXT OUTPUT FILE  (Flow stress vs Strain)
+
+fix  data_out  all  print  100  "$(step) $(v_strain_pct) $(v_flow_stress)"  &
+     file  flow_stress_vs_strain.txt  screen  no                             &
+     title  "# Step   Strain(%)   FlowStress(GPa)"
+
+
+# RUN
+
+run  10000
+# 10,000 steps × 0.001 ps = 10 ps total
+# Final strain = 10 %   (0 → 10 % in 0.1 % increments per 100 steps)
+
