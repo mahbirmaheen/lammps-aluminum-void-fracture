@@ -16,8 +16,8 @@ This project presents a molecular dynamics (MD) simulation of **void growth and 
 
 | Initial State | Stress Concentration | Void Growth | Near Fracture |
 |:---:|:---:|:---:|:---:|
-| ![t1](images/top.png) | ![t2](images/top2.png) | ![t3](images/top3.png) | ![t4](images/top4.png) | ![t4](images/top5.png) |
-| ε = 0% | ε ≈ 2% | ε ≈ 4–6% | ε ≈ 6-8% | ε ≈ 8–10% |
+| ![t1](images/top.png) | ![t2](images/top2.png) | ![t3](images/top3.png) | ![t4](images/top4.png) |
+| ε = 0% | ε ≈ 2% | ε ≈ 4–6% | ε ≈ 6-8% |
 
 > Atoms colored by von Mises / per-atom stress (σ_yy). Green = low stress (FCC bulk), Red/Blue = high stress (defect zones).
 
