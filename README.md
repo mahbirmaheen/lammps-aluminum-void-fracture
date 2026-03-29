@@ -58,58 +58,7 @@ The curve shows a classic **elastic → peak → softening** behavior driven by:
 | **Boundary Conditions** | Periodic (x, z) · Shrink-wrap (y — loading axis) |
 | **Loading Method** | Symmetric constant-velocity boundary displacement |
 
----
 
-## 📁 Repository Structure
-
-```
-├── input_Al.lmp              # Main LAMMPS input script
-├── Al99.eam.alloy            # EAM interatomic potential file
-├── flow_stress_vs_strain.txt # Raw output: step, strain(%), flow stress(GPa)
-├── stress_strain_positive.csv# Processed CSV (positive stress values)
-├── convert.py                # Python script to convert raw output → CSV
-├── images/
-│   ├── top1.png              # OVITO snapshot — initial (ε = 0%)
-│   ├── top2.png              # OVITO snapshot — stress concentration
-│   ├── top3.png              # OVITO snapshot — void growth
-│   ├── top4.png              # OVITO snapshot — necking
-│   ├── top5.png              # OVITO snapshot — near fracture
-│   └── stress_strain_plot.png
-└── videos/
-    ├── front.mp4
-    ├── left.mp4
-    ├── top.mp4
-    └── perspective.mp4
-```
-
----
-
-## 🚀 How to Reproduce
-
-### Prerequisites
-- [LAMMPS](https://www.lammps.org/) (any recent stable version)
-- [OVITO](https://www.ovito.org/) (for visualization)
-- Python 3 + pandas (for post-processing)
-
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/lammps-al-void-fracture.git
-cd lammps-al-void-fracture
-
-# 2. Run the simulation
-lmp -in input_Al.lmp
-
-# 3. Convert output to CSV
-python convert.py
-
-# 4. Visualize with OVITO
-#    Open crack_Al.dump in OVITO
-#    Color atoms by: c_stress_atom[2] (σ_yy component)
-```
-
----
 
 ## 🧪 Physics Highlights
 
@@ -140,9 +89,9 @@ python convert.py
 
 ## 👤 Author
 
-**[Your Name]**  
-[Your Institution / Affiliation]  
-[LinkedIn](https://linkedin.com/in/yourprofile) · [Email](mailto:you@example.com)
+**Mahbir Ahmed Maheen**  
+ 
+[LinkedIn]([https://linkedin.com/in/yourprofile](https://www.linkedin.com/in/mahbirmaheen/)) · [Email](mailto:mahbirmaheen.mse@gmail.com)
 
 ---
 
