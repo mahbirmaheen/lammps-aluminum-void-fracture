@@ -25,7 +25,7 @@ This project presents a molecular dynamics (MD) simulation of **void growth and 
 
 ## 📊 Stress–Strain Response
 
-![Stress-Strain Plot](images/stress_strain_plot.png)
+![Stress-Strain Plot](images/stress_strain_analysis.png)
 
 | Property | Value |
 |---|---|
