@@ -91,7 +91,7 @@ The curve shows a classic **elastic → peak → softening** behavior driven by:
 
 **Mahbir Ahmed Maheen**  
  
-[LinkedIn]([https://linkedin.com/in/mahbirmaheen]) · [Email](mailto:mahbirmaheen.mse@gmail.com)
+[LinkedIn](https://linkedin.com/in/mahbirmaheen)· [Email](mailto:mahbirmaheen.mse@gmail.com)
 
 ---
 
