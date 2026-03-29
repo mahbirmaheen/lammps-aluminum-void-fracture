@@ -1,0 +1,8 @@
+Property,Value
+Peak flow stress (GPa),7.3794
+Strain at peak (%),2.90
+LAMMPS step at peak,2900
+Initial stress at ε=0.1% (GPa),0.0543
+Final stress at ε=10% (GPa),0.3914
+Stress drop from peak (GPa),6.9880
+Stress drop from peak (%),94.7
